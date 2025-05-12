@@ -39,4 +39,5 @@ public class Additionally
     public int Attackerblind { get; init; }
     public int Thrusmoke { get; init; }
     public int Penetrated { get; init; }
+    public int Attackerinair { get; init; }
 }

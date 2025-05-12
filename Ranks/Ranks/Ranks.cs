@@ -345,6 +345,8 @@ public class Ranks : BasePlugin
                     if (@event.Headshot)
                         UpdateUserStatsLocal(attacker, Localizer["MurderToTheHead"], exp: additionally.Headshot,
                             headshots: 1);
+                    if (@event.Attackerinair)
+                        UpdateUserStatsLocal(attacker, Localizer["Attackerinir"], exp: additionally.Attackerinair);
                     if (@event.Attackerblind)
                         UpdateUserStatsLocal(attacker, Localizer["BlindMurder"], exp: additionally.Attackerblind);
                     if (Config.Weapon.TryGetValue(weaponName, out var exp))
@@ -745,7 +747,7 @@ public class Ranks : BasePlugin
                 EventPlayerBomb = new Bomb { DroppedBomb = -5, DefusedBomb = 3, PickUpBomb = 3, PlantedBomb = 4 },
                 EventRoundEnd = new RoundEnd { Winner = 5, Loser = -8 },
                 Additionally = new Additionally
-                    { Headshot = 1, Noscope = 2, Attackerblind = 1, Thrusmoke = 1, Penetrated = 2 }
+                    { Headshot = 1, Noscope = 2, Attackerblind = 1, Thrusmoke = 1, Penetrated = 2, Attackerinair = 1}
             },
             Weapon = new Dictionary<string, int>
             {
