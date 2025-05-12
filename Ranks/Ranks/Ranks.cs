@@ -346,7 +346,7 @@ public class Ranks : BasePlugin
                         UpdateUserStatsLocal(attacker, Localizer["MurderToTheHead"], exp: additionally.Headshot,
                             headshots: 1);
                     if (@event.Attackerinair)
-                        UpdateUserStatsLocal(attacker, Localizer["Attackerinir"], exp: additionally.Attackerinair);
+                        UpdateUserStatsLocal(attacker, Localizer["AttackerInAir"], exp: additionally.Attackerinair);
                     if (@event.Attackerblind)
                         UpdateUserStatsLocal(attacker, Localizer["BlindMurder"], exp: additionally.Attackerblind);
                     if (Config.Weapon.TryGetValue(weaponName, out var exp))

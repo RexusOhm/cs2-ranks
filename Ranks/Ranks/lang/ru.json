@@ -1,5 +1,5 @@
 {
-  "Attackerinir": "за убийство в воздухе",
+  "AttackerInAir": "за убийство в воздухе",
   "KillStreak": "{0} kill streak",
   "PerKill": "за убийство",
   "PerDeath": "за смерть {red}:({default}",
