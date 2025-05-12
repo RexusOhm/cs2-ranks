@@ -24,7 +24,7 @@ namespace Ranks;
 [MinimumApiVersion(210)]
 public class Ranks : BasePlugin
 {
-    public override string ModuleAuthor => "thesamefabius";
+    public override string ModuleAuthor => "thesamefabius, forked by RexusOhm";
     public override string ModuleDescription => "Adds a rating system to the server";
     public override string ModuleName => "[Ranks] Core";
     public override string ModuleVersion => "v2.0.5";
@@ -35,6 +35,7 @@ public class Ranks : BasePlugin
     public Database Database = null!;
     public RanksApi RanksApi = null!;
 
+    private Dictionary<CCSPlayerController, int> _killStreaks = [];
     public readonly ConcurrentDictionary<ulong, User> Users = new();
     private readonly DateTime[] _loginTime = new DateTime[64];
 
@@ -68,6 +69,7 @@ public class Ranks : BasePlugin
         RegisterEventHandler<EventRoundStart>(EventRoundStart);
         RegisterEventHandler<EventRoundEnd>(EventRoundEnd);
         RegisterEventHandler<EventRoundMvp>(EventRoundMvp);
+        RegisterListener<Listeners.OnMapStart>(OnMapStart);
         
         BombEvents();
         CreateMenu();
@@ -249,6 +251,11 @@ public class Ranks : BasePlugin
             //Task.Run(OnMapStartAsync);
         }
     }
+    private void OnMapStart(string mapName)
+    {
+        // reset player kills
+        _killStreaks.Clear();
+    }
 
     private HookResult EventWeaponFire(EventWeaponFire @event, GameEventInfo info)
     {
@@ -314,7 +321,21 @@ public class Ranks : BasePlugin
                     }
                     else
                         UpdateUserStatsLocal(attacker, Localizer["PerKill"], exp: configEvent.Kills, kills: 1);
+                    
+                    if (_killStreaks.ContainsKey(attacker))
+                    {
+                        _killStreaks[attacker]++;
+                    }
+                    else
+                    {
+                        _killStreaks.Add(attacker, 1);
+                    }
 
+                    if (_killStreaks.TryGetValue(attacker, out var streak) && streak >= 2)
+                    {
+                        if (Config.KillStreaks.TryGetValue(streak, out var ksexp))
+                            UpdateUserStatsLocal(attacker, Localizer["KillStreak", streak], exp: ksexp);
+                    }
                     if (@event.Penetrated > 0)
                         UpdateUserStatsLocal(attacker, Localizer["KillingThroughWall"], exp: additionally.Penetrated);
                     if (@event.Thrusmoke)
@@ -356,6 +377,11 @@ public class Ranks : BasePlugin
             }
             else
                 UpdateUserStatsLocal(victim, Localizer["suicide"], exp: configEvent.Suicide);
+
+            if (Config.ResetKillsOnDeath)
+            {
+                _killStreaks.Remove(victim);
+            }
         }
 
         if (assister is not null && assister.IsValid)
@@ -396,6 +422,10 @@ public class Ranks : BasePlugin
             PrintToChatAll(Localizer["NotEnoughPlayers", playerCount, Config.MinPlayers]);
         }
 
+        if (Config.ResetKillsOnRoundStart)
+        {
+            _killStreaks.Clear();
+        }
         return HookResult.Continue;
     }
 
@@ -549,7 +579,7 @@ public class Ranks : BasePlugin
         var newExp = RanksApi.OnPlayerExperienceChanged(player, exp);
         exp = newExp ?? exp;
         user.value += exp;
-
+        
         user.kills += kills;
         user.deaths += death;
         user.assists += assist;
@@ -698,6 +728,8 @@ public class Ranks : BasePlugin
             TableName = "lvl_base",
             Prefix = "[ {BLUE}Ranks {DEFAULT}]",
             TeamKillAllowed = true,
+            ResetKillsOnDeath = true,
+            ResetKillsOnRoundStart = false,
             UseCommandWithoutPrefix = true,
             ShowExperienceMessages = true,
             MinPlayers = 4,
@@ -741,6 +773,18 @@ public class Ranks : BasePlugin
                 { "Legendary Eagle Master", 2900 },
                 { "Supreme", 3400 },
                 { "The Global Elite", 4500 }
+            },
+            KillStreaks = new Dictionary<int, int>
+            {
+                { 2, 2 },
+                { 3, 3 },
+                { 4, 5 },
+                { 5, 10 },
+                { 6, 20 },
+                { 7, 40 },
+                { 8, 60 },
+                { 9, 80 },
+                { 10, 100 }
             },
             Connection = new RankDb
             {
@@ -824,4 +868,7 @@ public class Config
     public Dictionary<string, int> Weapon { get; init; } = null!;
     public Dictionary<string, int> Ranks { get; init; } = null!;
     public RankDb Connection { get; init; } = null!;
+    public Dictionary<int, int> KillStreaks { get; init; } = null!;
+    public bool ResetKillsOnDeath { get; init; }
+    public bool ResetKillsOnRoundStart { get; init; }
 }
